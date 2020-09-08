@@ -169,8 +169,8 @@ class Restic
 
     public function listBlobs($repo = "", $type = "") {
         if (func_num_args() === 1) {
-            $repo = ".";
             $type = func_get_arg(0);
+            $repo = ".";
         }
         switch ($_SERVER["HTTP_ACCEPT"]) {
         case $this->mimeTypeAPIV2:
@@ -209,8 +209,8 @@ class Restic
     public function listBlobsV2($repo_name, $type)
     {
         if (func_num_args() === 1) {
+            $type = func_get_arg(0);
             $repo_name = ".";
-            $type = func_get_arg(1);
         }
         $names = Array();
         $path = $this->pathResolve($this->basePath, $repo_name, $type);
@@ -241,9 +241,9 @@ class Restic
     public function saveBlob($repo_name, $type, $name = "")
     {
         if (func_num_args() === 2) {
-            $repo_name = ".";
-            $type = func_get_arg(0);
             $name = func_get_arg(1);
+            $type = func_get_arg(0);
+            $repo_name = ".";
         }
         if ($this->isHashed($type)) {
             $path = $this->pathResolve($this->basePath, $repo_name, $type, substr($name, 0, 2), $name);
@@ -268,9 +268,9 @@ class Restic
     public function checkBlob($repo_name, $type, $name = "")
     {
         if (func_num_args() === 2) {
-            $repo_name = ".";
-            $type = func_get_arg(0);
             $name = func_get_arg(1);
+            $type = func_get_arg(0);
+            $repo_name = ".";
         }
         if ($this->isHashed($type)) {
             $path = $this->pathResolve($this->basePath, $repo_name, $type, substr($name, 0, 2), $name);
@@ -296,9 +296,9 @@ class Restic
     public function getBlob($repo_name, $type, $name = "")
     {
         if (func_num_args() === 2) {
-            $repo_name = ".";
-            $type = func_get_arg(0);
             $name = func_get_arg(1);
+            $type = func_get_arg(0);
+            $repo_name = ".";
         }
         if ($this->isHashed($type)) {
             $path = $this->pathResolve($this->basePath, $repo_name, $type, substr($name, 0, 2), $name);
@@ -323,9 +323,9 @@ class Restic
     public function deleteBlob($repo_name, $type, $name = "")
     {
         if (func_num_args() === 2) {
-            $repo_name = ".";
-            $type = func_get_arg(0);
             $name = func_get_arg(1);
+            $type = func_get_arg(0);
+            $repo_name = ".";
         }
         if ($this->isHashed($type)) {
             $path = $this->pathResolve($this->basePath, $repo_name, $type, substr($name, 0, 2), $name);
