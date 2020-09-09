@@ -90,7 +90,9 @@ class Restic
     private function serveContent($file)
     {
         $offset = 0;
-        $mime = mime_content_type($file);
+        $mime = (function_exists("mime_content_type"))
+            ? mime_content_type($file)
+            : "application/octet-stream";
         $fullsize = filesize($file);
         $length = $fullsize;
         $is_range = false;
