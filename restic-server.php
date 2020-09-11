@@ -4,19 +4,28 @@ class Restic
     public $validTypes = Array("data", "index", "keys", "locks", "snapshots", "config");
     public $mimeTypeAPIV1 = "application/vnd.x.restic.rest.v1";
     public $mimeTypeAPIV2 = "application/vnd.x.restic.rest.v2";
-    protected $block_size = 8192;
+    private $block_size = 8192;
+    private $basePath = "restic";
+    public $private_repos = false;
 
-    protected $basePath;
 
-    private function __construct($path = ".")
+    private function __construct($opts)
     {
-        $this->basePath = $path;
+        if (isset($opts["path"])) {
+            $this->basePath = $opts["path"];
+        }
+        if (isset($opts["private_repos"])) {
+            $this->private_repos = $opts["private_repos"];
+        }
+        if (isset($opts["block_size"])) {
+            $this->block_size = $opts["block_size"];
+        }
     }
-    public static function Instance($path = ".")
+    public static function Instance($opts = Array())
     {
         static $inst = null;
         if ($inst === null) {
-            $inst = new Restic($path);
+            $inst = new Restic($opts);
         }
         return $inst;
     }
@@ -28,6 +37,9 @@ class Restic
             break;
         case 400:
             header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
+            break;
+        case 401:
+            header($_SERVER["SERVER_PROTOCOL"] . " 401 Unauthorized");
             break;
         case 403:
             header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");

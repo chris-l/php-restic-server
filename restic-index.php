@@ -2,8 +2,10 @@
 
 require("restic-server.php");
 date_default_timezone_set('UTC');
-$basePath = "restic";
-$restic = Restic::Instance($basePath);
+$restic = Restic::Instance(Array(
+    "path" => "restic",
+    "private_repos" => false
+));
 
 function page_404() {
     $restic = Restic::Instance();
@@ -24,8 +26,16 @@ function route($method, $path, $fn) {
     $path = "/^" . str_replace("/", "\/", $path) . "$/";
     $path = preg_replace("/\([^\)]*\)/", "([^\/]+)", $path);
     $apply = preg_match($path, $uri[0], $matches);
+    $first = (sizeof($matches) < 2)
+        ? null
+        : $matches[1];
 
     if ($_SERVER["REQUEST_METHOD"] == $method && $apply == 1) {
+        if ($restic->private_repos && !(isset($_SERVER["PHP_AUTH_USER"]) && $first == $_SERVER["PHP_AUTH_USER"])) {
+            $restic->sendStatus(401); //Unauthorized
+            header("Content-Type:");
+            exit;
+        }
         call_user_func_array(Array($restic, $fn), array_slice($matches, 1));
         exit;
     }
