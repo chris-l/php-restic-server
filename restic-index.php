@@ -30,8 +30,20 @@ function route($method, $path, $fn) {
         ? null
         : $matches[1];
 
+    if (isset($_SERVER["PHP_AUTH_USER"])) {
+        $user = $_SERVER["PHP_AUTH_USER"];
+    } elseif ($_SERVER["REMOTE_USER"]) {
+        $user = $_SERVER["REMOTE_USER"];
+    } elseif ($_SERVER["REDIRECT_REMOTE_USER"]) {
+        $user = $_SERVER["REDIRECT_REMOTE_USER"];
+    } elseif ($_SERVER["AUTH_USER"]) {
+        $user = $_SERVER["AUTH_USER"];
+    } elseif ($_SERVER["HTTP_AUTHORIZATION"]) {
+        $user = $_SERVER["HTTP_AUTHORIZATION"];
+    }
+
     if ($_SERVER["REQUEST_METHOD"] == $method && $apply == 1) {
-        if ($restic->private_repos && !(isset($_SERVER["PHP_AUTH_USER"]) && $first == $_SERVER["PHP_AUTH_USER"])) {
+        if ($restic->private_repos && $user !== $first) {
             $restic->sendStatus(401); //Unauthorized
             header("Content-Type:");
             exit;
