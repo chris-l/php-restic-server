@@ -30,15 +30,15 @@ function route($method, $path, $fn) {
         ? null
         : $matches[1];
 
-    if (isset($_SERVER["PHP_AUTH_USER"])) {
+    if (array_key_exists("PHP_AUTH_USER", $_SERVER)) {
         $user = $_SERVER["PHP_AUTH_USER"];
-    } elseif ($_SERVER["REMOTE_USER"]) {
+    } elseif (array_key_exists("REMOTE_USER", $_SERVER)) {
         $user = $_SERVER["REMOTE_USER"];
-    } elseif ($_SERVER["REDIRECT_REMOTE_USER"]) {
+    } elseif (array_key_exists("REDIRECT_REMOTE_USER", $_SERVER)) {
         $user = $_SERVER["REDIRECT_REMOTE_USER"];
-    } elseif ($_SERVER["AUTH_USER"]) {
+    } elseif (array_key_exists("AUTH_USER", $_SERVER)) {
         $user = $_SERVER["AUTH_USER"];
-    } elseif ($_SERVER["HTTP_AUTHORIZATION"]) {
+    } elseif (array_key_exists("HTTP_AUTHORIZATION", $_SERVER)) {
         $user = $_SERVER["HTTP_AUTHORIZATION"];
     }
 

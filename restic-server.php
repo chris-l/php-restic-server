@@ -11,13 +11,13 @@ class Restic
 
     private function __construct($opts)
     {
-        if (isset($opts["path"])) {
+        if (array_key_exists("path", $opts)) {
             $this->basePath = $opts["path"];
         }
-        if (isset($opts["private_repos"])) {
+        if (array_key_exists("private_repos", $opts)) {
             $this->private_repos = $opts["private_repos"];
         }
-        if (isset($opts["block_size"])) {
+        if (array_key_exists("block_size", $opts)) {
             $this->block_size = $opts["block_size"];
         }
     }
@@ -109,7 +109,7 @@ class Restic
         $length = $fullsize;
         $is_range = false;
 
-        if (isset($_SERVER["HTTP_RANGE"])) {
+        if (array_key_exists("HTTP_RANGE", $_SERVER)) {
             if (substr($_SERVER["HTTP_RANGE"], 0, 6) !== "bytes=") {
                 $this->sendStatus(416); // not satisfiable
                 header("Content-Range: bytes */" . $fullsize);
@@ -427,7 +427,7 @@ class Restic
     public function createRepo($repo_name = ".")
     {
         $repo = $this->pathResolve($this->basePath, $repo_name);
-        if (!isset($_GET["create"]) || $_GET["create"] != "true") {
+        if (!array_key_exists("create", $_GET) || $_GET["create"] != "true") {
             $this->sendStatus(400); // bad request
             exit;
         }
