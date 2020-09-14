@@ -9,7 +9,7 @@ php-restic-server is a PHP implementation of restic's [REST backend API](http://
 * PHP 5.3 or better.
 * The server needs to allow PHP scripts to create, edit, and delete files and directories.
 * The server should allow you to redirect every request in the path where php-restic-server is installed to be handled by the `restic-index.php` script. That can be done with an `.htaccess` file in the case of apache.
-* The server should allow the upload and storage of files of the size of the Blobs (some servers put limits on the sizes allowed). According to the [documentation](https://restic.readthedocs.io/en/latest/100_references.html#backups-and-deduplication), Blobs are from 512 KiB to 8 MiB in size. However, in my tests, I have found Blobs as large as 8.7 MiB. Thefore, the server should allow uploads and storage of files with a size slighly bigger, like 10 MiB at least.
+* The server should allow the upload and storage of files of the size of the Blobs (some servers put limits on the sizes allowed). According to the [documentation](https://restic.readthedocs.io/en/latest/100_references.html#backups-and-deduplication), Blobs are from 512 KiB to 8 MiB in size. However, in my tests, I have found Blobs as large as 8.7 MiB. Therefore, the server should allow uploads and storage of files with a size slightly bigger, like 10 MiB at least.
 * To use the private repos mode, authentication is required. And its highly recommended that the server has an SSL cert to serve requests via HTTPS. Otherwise, the auth password could easily be sniffed by a third party.
 
 ## Installation
