@@ -4,6 +4,7 @@ require("restic-server.php");
 date_default_timezone_set('UTC');
 $restic = Restic::Instance(Array(
     "path" => "restic",
+    "append_only" => false,
     "private_repos" => false
 ));
 

@@ -4,6 +4,7 @@ class Restic
     public $validTypes = Array("data", "index", "keys", "locks", "snapshots", "config");
     public $mimeTypeAPIV1 = "application/vnd.x.restic.rest.v1";
     public $mimeTypeAPIV2 = "application/vnd.x.restic.rest.v2";
+    private $append_only = false;
     private $block_size = 8192;
     private $basePath = "restic";
     public $private_repos = false;
@@ -16,6 +17,9 @@ class Restic
         }
         if (array_key_exists("private_repos", $opts)) {
             $this->private_repos = $opts["private_repos"];
+        }
+        if (array_key_exists("append_only", $opts)) {
+            $this->append_only = $opts["append_only"];
         }
         if (array_key_exists("block_size", $opts)) {
             $this->block_size = $opts["block_size"];
@@ -341,6 +345,12 @@ class Restic
             $type = func_get_arg(0);
             $repo_name = ".";
         }
+
+        if ($this->append_only && $type != "locks") {
+            $this->sendStatus(403); // forbidden
+            exit;
+        }
+
         if ($this->isHashed($type)) {
             $path = $this->pathResolve($this->basePath, $repo_name, $type, substr($name, 0, 2), $name);
         } else {
@@ -391,6 +401,11 @@ class Restic
     public function deleteConfig($repo_name = ".")
     {
         $cfg = $this->pathResolve($this->basePath, $repo_name, "config");
+
+        if ($this->append_only) {
+            $this->sendStatus(403); // forbidden
+            exit;
+        }
 
         if (!file_exists($cfg)) {
             $this->sendStatus(404); //not found
