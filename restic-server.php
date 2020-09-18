@@ -7,6 +7,8 @@ class Restic
     private $append_only = false;
     private $block_size = 8192;
     private $basePath = "restic";
+    private $currentSize = 0;
+    private $maxRepoSize = 0;
     public $private_repos = false;
 
 
@@ -23,6 +25,9 @@ class Restic
         }
         if (array_key_exists("block_size", $opts)) {
             $this->block_size = $opts["block_size"];
+        }
+        if (array_key_exists("max_size", $opts)) {
+            $this->maxRepoSize = $opts["max_size"];
         }
     }
     public static function Instance($opts = Array())
@@ -51,6 +56,12 @@ class Restic
         case 404:
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
             break;
+        case 411;
+            header($_SERVER["SERVER_PROTOCOL"] . " 411 Length Required");
+            break;
+        case 413:
+            header($_SERVER["SERVER_PROTOCOL"] . " 413 Request Entity Too Large");
+            break;
         case 416:
             header($_SERVER["SERVER_PROTOCOL"] . " 416 Requested Range Not Satisfiable");
             break;
@@ -61,6 +72,28 @@ class Restic
             header($_SERVER["SERVER_PROTOCOL"] . " 200 OK");
         }
     }
+
+    private function tallySize($path, $firstrun = false)
+    {
+        $size = 0;
+        $items = $firstrun
+            ? $this->validTypes
+            : scandir($path);
+        foreach($items as $i) {
+            if ($i === "." || $i === "..") {
+                continue;
+            }
+            $fullpath = $this->pathResolve($path, $i);
+            if (is_dir($fullpath)) {
+                $size += $this->tallySize($fullpath);
+            } else {
+                $st = stat($fullpath);
+                $size += $st["size"];
+            }
+        }
+        return $size;
+    }
+
     private function pathResolve()
     {
         $sep = DIRECTORY_SEPARATOR;
@@ -263,6 +296,24 @@ class Restic
             $type = func_get_arg(0);
             $repo_name = ".";
         }
+
+        if ($this->maxRepoSize != 0) {
+            // We never update currentSize after this, because the server will execute
+            // an instance of the script per request anyway. The stat cache helps with the speed.
+            $this->currentSize = $this->tallySize($this->pathResolve($this->basePath, $repo_name), true);
+
+            if (array_key_exists("CONTENT_LENGTH", $_SERVER) && $_SERVER["CONTENT_LENGTH"] != "") {
+                $contentLen = intval($_SERVER["CONTENT_LENGTH"]);
+                if (($this->currentSize + $contentLen) > $this->maxRepoSize) {
+                    $this->sendStatus(413); // payload too large
+                    exit;
+                }
+            } else {
+                $this->sendStatus(411); // length required
+                exit;
+            }
+        }
+
         if ($this->isHashed($type)) {
             $path = $this->pathResolve($this->basePath, $repo_name, $type, substr($name, 0, 2), $name);
         } else {

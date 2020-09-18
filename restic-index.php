@@ -5,7 +5,8 @@ date_default_timezone_set('UTC');
 $restic = Restic::Instance(Array(
     "path" => "restic",
     "append_only" => false,
-    "private_repos" => false
+    "private_repos" => false,
+    "max_size" => 0
 ));
 
 function page_404() {
