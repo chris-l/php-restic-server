@@ -10,6 +10,17 @@ class Restic
     private $currentSize = 0;
     private $maxRepoSize = 0;
     public $private_repos = false;
+    private $status_codes = Array(
+        "206" => "Partial Content",
+        "400" => "Bad Request",
+        "401" => "Unauthorized",
+        "403" => "Forbidden",
+        "404" => "Not Found",
+        "411" => "Length Required",
+        "413" => "Request Entity Too Large",
+        "416" => "Requested Range Not Satisfiable",
+        "500" => "Internal Server Error"
+    );
 
 
     private function __construct($opts)
@@ -40,37 +51,20 @@ class Restic
     }
     public function sendStatus($status)
     {
-        switch ($status) {
-        case 206:
-            header($_SERVER["SERVER_PROTOCOL"] . " 206 Partial Content");
-            break;
-        case 400:
-            header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
-            break;
-        case 401:
-            header($_SERVER["SERVER_PROTOCOL"] . " 401 Unauthorized");
-            break;
-        case 403:
-            header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-            break;
-        case 404:
-            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            break;
-        case 411;
-            header($_SERVER["SERVER_PROTOCOL"] . " 411 Length Required");
-            break;
-        case 413:
-            header($_SERVER["SERVER_PROTOCOL"] . " 413 Request Entity Too Large");
-            break;
-        case 416:
-            header($_SERVER["SERVER_PROTOCOL"] . " 416 Requested Range Not Satisfiable");
-            break;
-        case 500:
-            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
-            break;
-        default:
-            header($_SERVER["SERVER_PROTOCOL"] . " 200 OK");
-        }
+        header($_SERVER["SERVER_PROTOCOL"] . " $status " . $this->status_codes[$status]);
+    }
+
+    public function sendError($status, $msg = "")
+    {
+        header($_SERVER["SERVER_PROTOCOL"] . " $status " . $this->status_codes[$status]);
+        header("Content-Type: text/plain");
+        $msg = !empty($msg)
+            ? $msg
+            : $this->status_codes[$status];
+        header("Content-Length: " . strlen($msg));
+        header("Connection: close");
+        print $msg;
+        exit;
     }
 
     private function tallySize($path, $firstrun = false)
@@ -305,12 +299,10 @@ class Restic
             if (array_key_exists("CONTENT_LENGTH", $_SERVER) && $_SERVER["CONTENT_LENGTH"] != "") {
                 $contentLen = intval($_SERVER["CONTENT_LENGTH"]);
                 if (($this->currentSize + $contentLen) > $this->maxRepoSize) {
-                    $this->sendStatus(413); // payload too large
-                    exit;
+                    $this->sendError(413); // payload too large
                 }
             } else {
-                $this->sendStatus(411); // length required
-                exit;
+                $this->sendError(411); // length required
             }
         }
 
@@ -321,15 +313,13 @@ class Restic
         }
         $tf = fopen($path, "x");
         if ($tf === false) {
-            $this->sendStatus(403); // forbidden
-            exit;
+            $this->sendError(403); // forbidden
         }
         $body = fopen("php://input", "r");
         stream_copy_to_stream($body, $tf);
 
         if (fclose($tf) === false || fclose($body) === false) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
         header("Content-Type:");
     }
@@ -348,13 +338,11 @@ class Restic
         }
 
         if (!file_exists($path)) {
-            $this->sendStatus(404); //not found
-            exit;
+            $this->sendError(404); //not found
         }
         $st = stat($path);
         if (!$st) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
 
         header("Content-Type:");
@@ -376,13 +364,11 @@ class Restic
         }
 
         if (!file_exists($path)) {
-            $this->sendStatus(404); //not found
-            exit;
+            $this->sendError(404); //not found
         }
         $st = stat($path);
         if (!$st) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
 
         $this->serveContent($path);
@@ -398,8 +384,7 @@ class Restic
         }
 
         if ($this->append_only && $type != "locks") {
-            $this->sendStatus(403); // forbidden
-            exit;
+            $this->sendError(403); // forbidden
         }
 
         if ($this->isHashed($type)) {
@@ -409,12 +394,10 @@ class Restic
         }
 
         if (!file_exists($path)) {
-            $this->sendStatus(404); //not found
-            exit;
+            $this->sendError(404); //not found
         }
         if (!unlink($path)) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
         header("Content-Type:");
     }
@@ -424,13 +407,11 @@ class Restic
         $cfg = $this->pathResolve($this->basePath, $repo_name, "config");
 
         if (!file_exists($cfg)) {
-            $this->sendStatus(404); //not found
-            exit;
+            $this->sendError(404); //not found
         }
         $st = stat($cfg);
         if (!$st) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
 
         header("Content-Type:");
@@ -443,8 +424,7 @@ class Restic
         $cfg = $this->pathResolve($this->basePath, $repo_name, "config");
 
         if (!file_exists($cfg)) {
-            $this->sendStatus(404); //not found;
-            exit;
+            $this->sendError(404); //not found;
         }
         $this->serveContent($cfg);
     }
@@ -454,17 +434,14 @@ class Restic
         $cfg = $this->pathResolve($this->basePath, $repo_name, "config");
 
         if ($this->append_only) {
-            $this->sendStatus(403); // forbidden
-            exit;
+            $this->sendError(403); // forbidden
         }
 
         if (!file_exists($cfg)) {
-            $this->sendStatus(404); //not found
-            exit;
+            $this->sendError(404); //not found
         }
         if (!unlink($cfg)) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
         header("Content-Type:");
     }
@@ -476,16 +453,14 @@ class Restic
 
         $f = fopen($cfg, "x");
         if ($f === false) {
-            $this->sendStatus(403); // forbidden
-            exit;
+            $this->sendError(403); // forbidden
         }
 
         $body = fopen("php://input", "r");
         $err = stream_copy_to_stream($body, $f);
 
         if ($err === false || fclose($f) === false || fclose($body) === false) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
     }
 
@@ -494,13 +469,11 @@ class Restic
     {
         $repo = $this->pathResolve($this->basePath, $repo_name);
         if (!array_key_exists("create", $_GET) || $_GET["create"] != "true") {
-            $this->sendStatus(400); // bad request
-            exit;
+            $this->sendError(400); // bad request
         }
 
         if ($repo_name !== "." && !mkdir($repo, 0700, true)) {
-            $this->sendStatus(500); // internal error
-            exit;
+            $this->sendError(500); // internal error
         }
 
         foreach ($this->validTypes as $d) {
@@ -509,15 +482,13 @@ class Restic
             }
 
             if (!mkdir($this->pathResolve($repo, $d), 0700)) {
-                $this->sendStatus(500); // internal error
-                exit;
+                $this->sendError(500); // internal error
             }
         }
 
         for ($i = 0; $i <= 255; $i++) {
             if (!mkdir($this->pathResolve($repo, "data", sprintf("%02x", $i)), 0700)) {
-                $this->sendStatus(500); // internal error
-                exit;
+                $this->sendError(500); // internal error
             }
         }
     }
