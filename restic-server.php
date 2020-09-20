@@ -217,20 +217,23 @@ class Restic
             $type = func_get_arg(0);
             $repo = ".";
         }
+        $path = $this->pathResolve($this->basePath, $repo, $type);
+        if (!is_dir($path)) {
+            $this->sendError(404); // not found
+        }
         switch ($_SERVER["HTTP_ACCEPT"]) {
         case $this->mimeTypeAPIV2:
-            $this->listBlobsV2($repo, $type);
+            $this->listBlobsV2($path, $type);
             break;
         default:
-            $this->listBlobsV1($repo, $type);
+            $this->listBlobsV1($path, $type);
         }
         return;
     }
 
-    public function listBlobsV1($repo_name, $type)
+    public function listBlobsV1($path, $type)
     {
         $names = Array();
-        $path = $this->pathResolve($this->basePath, $repo_name, $type);
         $items = scandir($path);
         foreach($items as $i) {
             if ($i === "." || $i === "..") {
@@ -251,14 +254,9 @@ class Restic
         header("Content-Type: " . $this->mimeTypeAPIV1);
         echo json_encode($names);
     }
-    public function listBlobsV2($repo_name, $type)
+    public function listBlobsV2($path, $type)
     {
-        if (func_num_args() === 1) {
-            $type = func_get_arg(0);
-            $repo_name = ".";
-        }
         $names = Array();
-        $path = $this->pathResolve($this->basePath, $repo_name, $type);
         $items = scandir($path);
         foreach($items as $i) {
             if ($i === "." || $i === "..") {
