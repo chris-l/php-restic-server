@@ -1,13 +1,9 @@
 <?php
 
 require("restic-server.php");
+require("restic-config.php");
 date_default_timezone_set('UTC');
-$restic = Restic::Instance(Array(
-    "path" => "restic",
-    "append_only" => false,
-    "private_repos" => false,
-    "max_size" => 0
-));
+$restic = Restic::Instance($config);
 
 function page_404() {
     $restic = Restic::Instance();
