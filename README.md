@@ -14,7 +14,7 @@ php-restic-server is a PHP implementation of restic's [REST backend API](http://
 
 ## Installation
 
-Create a directory inside the document root of your server and copy the files `restic-index.php` and `restic-server.php` there. In this same directory, create a `restic` directory where your repos will reside (you can change the directory that will store your repos by editing the line `"path" => "restic"` on `restic-index.php`).
+Create a directory inside the document root of your server and copy the files `restic-index.php`, `restic-server.php` and `restic-config.php` there. In this same directory, create a `restic` directory where your repos will reside (you can change the directory that will store your repos by editing the line `"path" => "./restic"` on `restic-config.php`).
 
 If the server is Apache, then create an `.htaccess` file to redirect every request to `restic-index.php`.
 
@@ -35,16 +35,21 @@ try_files $uri $uri/ /restic-index.php?$args;
 
 Read the nginx documentation to find more about it.
 
-### Private Repos
+## Usage
 
-To limit the server to private repos, edit `restic-index.php` and set as true the line related to private repos:
+Edit the file `restic-config.php` to change the options.
 
-```php
-"private_repos" => true
-```
+(They use the same names and are used mostly the same way as the [original rest-server](https://github.com/restic/rest-server#usage), but not all the options are present)
 
-You will need to add authentication for it to work, and then the users will be locked to a repo named after their username.
-It's _highly recommended_ to use HTTPS, to prevent the password being passed over an unencrypted connection.
+
+| property        | type     | default value     | description |
+| --------------- | -------- | ----------------- | ----------- |
+| `append_only`   | `bool`   | `false`           | enable append only mode |
+| `max_size`      | `int`    | `0`               | the maximum size of the repository in bytes. Set it to 0 to be unlimited. |
+| `path`          | `string` | `"./restic"`      | data directory |
+| `private_repos` | `bool`   | `false`           | users can only access their private repo. Requires http auth. |
+
+For using the private repos mode, http auth is required. And it's _highly recommended_ to use HTTPS, to prevent the auth password being passed over an unencrypted connection.
 
 ## License
 
