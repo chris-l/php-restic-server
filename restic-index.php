@@ -11,6 +11,7 @@ function page_404() {
     header("Content-Type:");
     exit;
 }
+
 function route($method, $path, $fn) {
     $restic = Restic::Instance();
     $rawurl = (!empty($_SERVER['REQUEST_URL']))
@@ -46,7 +47,7 @@ function route($method, $path, $fn) {
             header("Content-Type:");
             exit;
         }
-        call_user_func_array(Array($restic, $fn), array_slice($matches, 1));
+        call_user_func_array(array($restic, $fn), array_slice($matches, 1));
         exit;
     }
 }
@@ -74,3 +75,4 @@ route("POST", "/(repo)", "createRepo");
 route("POST", "/(repo)/", "createRepo");
 
 page_404();
+

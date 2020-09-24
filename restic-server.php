@@ -1,7 +1,7 @@
 <?php
 class Restic
 {
-    public $validTypes = Array("data", "index", "keys", "locks", "snapshots", "config");
+    public $validTypes = array("data", "index", "keys", "locks", "snapshots", "config");
     public $mimeTypeAPIV1 = "application/vnd.x.restic.rest.v1";
     public $mimeTypeAPIV2 = "application/vnd.x.restic.rest.v2";
     private $append_only = false;
@@ -10,7 +10,7 @@ class Restic
     private $currentSize = 0;
     private $maxRepoSize = 0;
     public $private_repos = false;
-    private $status_codes = Array(
+    private $status_codes = array(
         "206" => "Partial Content",
         "400" => "Bad Request",
         "401" => "Unauthorized",
@@ -41,7 +41,8 @@ class Restic
             $this->maxRepoSize = $opts["max_size"];
         }
     }
-    public static function Instance($opts = Array())
+
+    static public function Instance($opts = array())
     {
         static $inst = null;
         if ($inst === null) {
@@ -49,6 +50,7 @@ class Restic
         }
         return $inst;
     }
+
     public function sendStatus($status)
     {
         header($_SERVER["SERVER_PROTOCOL"] . " $status " . $this->status_codes[$status]);
@@ -92,7 +94,7 @@ class Restic
     {
         $sep = DIRECTORY_SEPARATOR;
         $working_dir = getcwd();
-        $out = Array();
+        $out = array();
 
         foreach(func_get_args() as $p) {
             if ($p === null || $p === "") {
@@ -212,7 +214,8 @@ class Restic
         fclose($file);
     }
 
-    public function listBlobs($repo = "", $type = "") {
+    public function listBlobs($repo = "", $type = "")
+    {
         if (func_num_args() === 1) {
             $type = func_get_arg(0);
             $repo = ".";
@@ -222,18 +225,18 @@ class Restic
             $this->sendError(404); // not found
         }
         switch ($_SERVER["HTTP_ACCEPT"]) {
-        case $this->mimeTypeAPIV2:
-            $this->listBlobsV2($path, $type);
-            break;
-        default:
-            $this->listBlobsV1($path, $type);
+            case $this->mimeTypeAPIV2:
+                $this->listBlobsV2($path, $type);
+                break;
+            default:
+                $this->listBlobsV1($path, $type);
         }
         return;
     }
 
     public function listBlobsV1($path, $type)
     {
-        $names = Array();
+        $names = array();
         $items = scandir($path);
         foreach($items as $i) {
             if ($i === "." || $i === "..") {
@@ -254,9 +257,10 @@ class Restic
         header("Content-Type: " . $this->mimeTypeAPIV1);
         echo json_encode($names);
     }
+
     public function listBlobsV2($path, $type)
     {
-        $names = Array();
+        $names = array();
         $items = scandir($path);
         foreach($items as $i) {
             if ($i === "." || $i === "..") {
@@ -270,11 +274,11 @@ class Restic
                         continue;
                     }
                     $st = stat($this->pathResolve($subpath, $f));
-                    array_push($names, Array("name" => $f, "size" => $st["size"]));
+                    array_push($names, array("name" => $f, "size" => $st["size"]));
                 }
             } else {
                 $st = stat($this->pathResolve($path, $i));
-                array_push($names, Array("name" => $i, "size" => $st["size"]));
+                array_push($names, array("name" => $i, "size" => $st["size"]));
             }
         }
         header("Content-Type: " . $this->mimeTypeAPIV2);
@@ -491,3 +495,4 @@ class Restic
         }
     }
 }
+
