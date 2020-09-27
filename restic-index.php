@@ -41,7 +41,10 @@ function route($method, $path, $fn) {
         $user = $_SERVER["HTTP_AUTHORIZATION"];
     }
 
-    if ($_SERVER["REQUEST_METHOD"] == $method && $apply == 1) {
+    $req_method = array_key_exists("HTTP_X_HTTP_METHOD_OVERRIDE", $_SERVER)
+        ? strtoupper($_SERVER["HTTP_X_HTTP_METHOD_OVERRIDE"])
+        : strtoupper($_SERVER["REQUEST_METHOD"]);
+    if ($req_method == $method && $apply == 1) {
         if ($restic->private_repos && $user !== $first) {
             $restic->sendStatus(401); //Unauthorized
             header("Content-Type:");
